@@ -164,22 +164,19 @@ export const generateProfessionalImage = async (
   }));
 
   parts.push({
-    text: `Generate a completely new, high-end professional product photograph based on the reference images provided.
+    text: `Generate a completely new, high-end professional PRODUCT PHOTOGRAPH of a children's storybook based on the reference images provided.
 
     PROMPT: ${prompt}
 
     CRITICAL INSTRUCTIONS:
+    - This is a THIN, LIGHTWEIGHT SOFT-COVER children's storybook — A4 sized, like a cartoon magazine or activity book. NOT a hardcover. THIN flexible cover, ~20-30 pages. It should look THIN and FLEXIBLE, able to bend slightly like a magazine.
     - DO NOT just return the original image. You must generate a completely new scene and composition.
-    - NEW ARCHITECTURE & REALISM: You MUST design a brand new, AUTHENTIC environment. If the product is bedding, generate a completely different, realistic, cozy, and high-end bedroom.
-    - LIFESTYLE DECOR: Enrich the scene with tasteful, high-end decor. Include elements like a textured rug, elegant wall art or a mirror, stylish bedside lighting, and subtle lifestyle props (e.g., a cup of coffee/tea, a book, or a decorative plant) to make the space feel inviting and lived-in.
-    - STRICTLY NO CGI/RENDER LOOK: The image MUST look like a genuine photograph taken with a DSLR camera. Avoid fantastical backgrounds (e.g., fake forests outside windows). Use believable interior design, natural soft lighting, and realistic textures.
-    - COMPOSITION: Optimize the camera angle and product placement specifically for a ${aspectRatio} aspect ratio. Ensure the composition is balanced for these dimensions.
-    - PRODUCT ACCURACY: The product in the generated image must look exactly like the product in the reference images (same color, material, precise sewing details, decorative strips, etc.).
-    - Focus on clarity, authentic textile texture, and sincere aesthetic appeal.
-    - NO PEOPLE: Do NOT include any humans, persons, figures, or body parts in the image. The scene must be completely empty of people.
-    - NO EXTRA PRODUCTS: Do NOT add any textile products that are not in the reference images. No extra runners, throws, blankets, decorative pillows, cushions, or any additional bedding items beyond what is shown in the references. The bed must only contain the exact product set from the reference images.
-    - DUVET BACK SIDE: If the back/reverse side of the duvet is NOT visible in the reference photos, it is the SAME fabric and color as the front. Do NOT invent a different back side color or material.
-    - FLAT SHEET VISIBILITY: The flat sheet (çarşaf) is ALWAYS hidden under the duvet in bed scenes. It is NEVER visible, folded over, or draped on top of the duvet. Only the duvet cover and decorative pillowcases are visible on the bed surface.`
+    - NEW ENVIRONMENT: Design a warm, child-friendly scene — a cozy reading nook, a pastel-colored desk, a soft blanket setup, or a playful kids' room corner. Include small props like colored pencils, toy figures, star stickers, or a stuffed animal.
+    - STRICTLY NO CGI/RENDER LOOK: The image MUST look like a genuine photograph taken with a DSLR camera. Natural soft lighting, realistic paper textures, shallow depth of field.
+    - COMPOSITION: Optimize for ${aspectRatio} aspect ratio.
+    - PRODUCT ACCURACY: The book cover art and illustrations must match the reference images EXACTLY — same characters, same colors, same style.
+    - NO PEOPLE: Do NOT include any humans, persons, figures, or body parts.
+    - The book must look like a REAL THIN PRINTED BOOK — not a hardcover, not a thick novel.`
   });
 
   const response = await ai.models.generateContent({

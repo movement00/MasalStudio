@@ -57,13 +57,13 @@ const BASE_INSTRUCTIONS = (prompt: string, ar: string, angleInstructions: string
     CAMERA ANGLE & SCENE: ${angleInstructions}
 
     CRITICAL INSTRUCTIONS:
-    - This is a CHILDREN'S ILLUSTRATED STORYBOOK — A4 sized, soft cover, colorful Pixar/3D cartoon style illustrations inside.
+    - This is a THIN, LIGHTWEIGHT SOFT-COVER children's storybook — A4 sized, like a simple cartoon magazine or coloring book. NOT a hardcover, NOT a thick book. It has a THIN flexible cover and maybe 20-30 pages stapled or perfect-bound. Think of a thin children's activity book you'd find at a newsstand.
     - DO NOT just return the original image. You must generate a completely new scene and composition.
     - The book must look EXACTLY like the reference images — same cover art, same illustrations, same colors.
+    - CRITICAL: The book must look THIN and FLEXIBLE — NOT like a hardcover/ciltli book. No thick spine, no rigid covers. It should bend slightly, like a magazine or pamphlet.
     - SCENE STYLING: Create a warm, inviting, child-friendly environment with these decor elements: ${decor}.
     - STRICTLY NO CGI/RENDER LOOK: The image MUST look like a genuine photograph taken with a DSLR camera. Natural soft lighting, realistic textures, shallow depth of field.
     - COMPOSITION: Optimize for ${ar} aspect ratio.
-    - The book should look like a REAL PHYSICAL PRINTED BOOK — visible page thickness, slight paper texture, natural shadows.
     - DO NOT add any text, labels, or watermarks that are not on the original book.
     - NO PEOPLE: Do NOT include any humans, persons, figures, or body parts. Only the book and props.
     - WARM PASTEL COLOR PALETTE: The environment should feel magical, dreamy, and child-friendly.`;
