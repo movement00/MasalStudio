@@ -1,0 +1,344 @@
+import { generateImageRaw } from "./geminiService";
+
+export interface PipelineShot {
+  id: string;
+  label: string;
+  group: "A" | "B" | "C";
+  description: string;
+  promptBuilder: (generationPrompt: string, signatureDetails: string, pieceInfo: string, aspectRatio: string) => string;
+  textFirst: boolean;
+  enabled: boolean;
+}
+
+export interface PipelineResult {
+  id: string;
+  label: string;
+  imageUrl: string | null;
+  status: "pending" | "generating" | "done" | "error";
+  error?: string;
+}
+
+export interface PipelineProgress {
+  currentGroup: "A" | "B" | "C" | "done";
+  currentShot: string;
+  completedCount: number;
+  totalCount: number;
+  results: PipelineResult[];
+}
+
+// Group A — oda sahneleri: generationPrompt (ürün + oda atmosferi) kullanır
+const BASE_INSTRUCTIONS = (prompt: string, ar: string, angleInstructions: string) =>
+`Generate a completely new, high-end professional product photograph based on the reference images provided.
+
+    PROMPT: ${prompt}
+
+    CAMERA ANGLE & SCENE: ${angleInstructions}
+
+    CRITICAL INSTRUCTIONS:
+    - DO NOT just return the original image. You must generate a completely new scene and composition.
+    - NEW ARCHITECTURE & REALISM: You MUST design a brand new, AUTHENTIC environment. If the product is bedding, generate a completely different, realistic, cozy, and high-end bedroom.
+    - LIFESTYLE DECOR: Enrich the scene with tasteful, high-end decor. Include elements like a textured rug, elegant wall art or a mirror, stylish bedside lighting, and subtle lifestyle props (e.g., a cup of coffee/tea, a book, or a decorative plant) to make the space feel inviting and lived-in.
+    - STRICTLY NO CGI/RENDER LOOK: The image MUST look like a genuine photograph taken with a DSLR camera. Avoid fantastical backgrounds (e.g., fake forests outside windows). Use believable interior design, natural soft lighting, and realistic textures.
+    - COMPOSITION: Optimize the camera angle and product placement specifically for a ${ar} aspect ratio. Ensure the composition is balanced for these dimensions.
+    - PRODUCT ACCURACY: The product in the generated image must look exactly like the product in the reference images (same color, material, precise sewing details, decorative strips, etc.).
+    - Focus on clarity, authentic textile texture, and sincere aesthetic appeal.
+    - DO NOT add any text, labels, or watermarks to the image.
+    - NO PEOPLE: Do NOT include any humans, persons, figures, or body parts in the image. The scene must be completely empty of people.
+    - NO EXTRA PRODUCTS: Do NOT add any textile products that are not in the reference images. No extra runners, throws, blankets, decorative pillows, cushions, or any additional bedding items beyond what is shown in the references. The bed must only contain the exact product set from the reference images.
+    - DUVET BACK SIDE: If the back/reverse side of the duvet is NOT visible in the reference photos, assume it is the SAME fabric and color as the front side. Do NOT invent a different color or material for the unseen back side.
+    - FLAT SHEET VISIBILITY: The flat sheet (çarşaf) is ALWAYS hidden under the duvet in bed scenes. It is NEVER visible, folded over, or draped on top of the duvet. Only the duvet cover and decorative pillowcases are visible on the bed surface.`;
+
+export const PIPELINE_SHOTS: PipelineShot[] = [
+  // ═══ GROUP A: Room Scenes — generationPrompt (oda atmosferi dahil) ═══
+  {
+    id: "hero_editorial",
+    label: "Hero Shot (Editorial)",
+    group: "A",
+    description: "Ana ürün fotoğrafı — 3/4 açı, editorial çekim",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (gp, _sig, _pi, ar) => BASE_INSTRUCTIONS(gp, ar,
+      `Editorial 3/4 view from the foot of the bed, ~35° elevation. Full bed with headboard visible. This is the HERO e-commerce listing image.`
+    ),
+  },
+  {
+    id: "lifestyle_morning",
+    label: "Yaşam Alanı (Sabah Işığı)",
+    group: "A",
+    description: "Sıcak sabah ışığında yakın çekim",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (gp, _sig, _pi, ar) => BASE_INSTRUCTIONS(gp, ar,
+      `Camera approximately 1 meter from the bed surface, looking down at ~45°. Show ONLY the upper portion: turned-back duvet revealing the sheet, 1-2 pillows against the headboard. Warm golden morning window light (~4200K). Shallow depth of field. The background bedroom is soft bokeh. NOT a full room view — a CLOSE lifestyle detail.`
+    ),
+  },
+  {
+    id: "alt_angle_hero",
+    label: "Farklı Açı Hero (Alçak Açı)",
+    group: "A",
+    description: "Heybetli alçak açı çekim",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (gp, _sig, _pi, ar) => BASE_INSTRUCTIONS(gp, ar,
+      `Low angle shot. Camera at the foot of the bed, near floor level, looking UP toward the headboard. The duvet edge cascading over the foot is the closest element. Dramatic yet natural lighting.`
+    ),
+  },
+  {
+    id: "birdseye_flatlay",
+    label: "Kuşbakışı (Dağınık Yatak)",
+    group: "A",
+    description: "Üstten bakış, yaşanmış yatak görünümü",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (gp, sig, _pi, ar) => BASE_INSTRUCTIONS(gp, ar,
+      `Perfectly overhead bird's-eye view looking straight down at the bed.
+
+PRODUCT DETAILS: ${sig}
+
+The bed looks like someone just woke up — artfully rumpled, Instagram-worthy:
+- Duvet casually pulled to one side, exposing the sheet beneath
+- Pillows at casual angles, slightly overlapping
+- Soft natural wrinkles in the sheet
+
+NOT dirty or chaotic — elegantly lived-in, warm morning feel.
+Bedroom edges visible: nightstand with coffee cup, rug edge.
+Even warm overhead light.
+
+CRITICAL: The duvet, pillows, and all textile products must show the EXACT same colors, embroidery patterns, and fabric as the reference images. If the back side of the duvet is not visible in the reference photos, assume it is the SAME fabric and color as the front — do NOT invent a different back side color or material.`
+    ),
+  },
+
+  // ═══ GROUP B: Detail Shots — signatureDetails (saf ürün verisi) kullanır ═══
+  {
+    id: "macro_embroidery",
+    label: "Makro Nakış/Doku Detay",
+    group: "B",
+    description: "Nakış veya kumaş dokusuna yakın çekim",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Extreme close-up macro photograph of the fabric from the reference images.
+
+PRODUCT DETAILS: ${sig}
+
+Fill the ENTIRE frame with fabric surface — show the embroidery stitching or weave texture in extreme detail. Every thread must be visible and photorealistic.
+
+LIGHTING: Side lighting at 45° raking across the surface to reveal stitch depth and thread dimensionality.
+DEPTH: Shallow — tack sharp at the center fading to creamy bokeh at edges.
+
+CRITICAL:
+- No bed, no room, no background — ONLY the fabric surface up close.
+- The embroidery/texture must match the reference images EXACTLY — same pattern, same position, same colors. Do NOT invent patterns.
+- ${ar} aspect ratio.`,
+  },
+  {
+    id: "edge_corner_detail",
+    label: "Köşe/Kenar Detay",
+    group: "B",
+    description: "Kenar işçiliği close-up",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Close-up photograph of the edge/border treatment of the product from the reference images.
+
+PRODUCT DETAILS: ${sig}
+
+Show ONLY the corner or edge area where the stitching, piping, bias tape, or decorative strip is visible. Camera at a slight angle to show the three-dimensional profile. Side lighting to reveal stitch depth and construction quality.
+
+CRITICAL:
+- No bed, no room — only the edge detail.
+- Edge treatment must match references exactly — same type (piping/bias tape/decorative strip/hem), same color.
+- ${ar} aspect ratio.`,
+  },
+  {
+    id: "pillow_closeup",
+    label: "Yastık Yakın Çekim",
+    group: "B",
+    description: "Estetik yastık çekim — pastel arka plan, bokeh",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Beautiful lifestyle close-up photograph of a pillowcase from this bedding set.
+
+PRODUCT DETAILS: ${sig}
+
+SCENE: ONE plump stuffed pillowcase leaning against a headboard or propped up, viewed from the FRONT — camera directly facing the pillow face. The embroidery/pattern is the centerpiece of the shot. Behind the pillow: the rest of the bed (duvet, other pillows) in soft beautiful BOKEH.
+
+BACKGROUND ATMOSPHERE: Soft pastel-toned bedroom — warm sage, dusty rose, muted gold, or soft terracotta tones visible in the blurry background. Choose a pastel that COMPLEMENTS the product color. Pinterest-style warm aesthetic.
+
+CAMERA: Straight-on frontal view at pillow height (~40-50° elevation from bed surface), NOT from below or side. f/2.8 for shallow depth of field. Warm natural window light from the side.
+
+CRITICAL:
+- Embroidery/pattern on the pillowcase must be TACK SHARP and clearly visible.
+- Product must match references exactly — same embroidery, same edge treatment, same fabric color.
+- ${ar} aspect ratio.`,
+  },
+
+  // ═══ GROUP C: Layout & Marketing — signatureDetails + pieceInfo kullanır ═══
+  {
+    id: "box_content_knolling",
+    label: "Kutu İçeriği (Set Görünümü)",
+    group: "C",
+    description: "Tüm parçalar kuşbakışı düzenli flat-lay",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, pieceInfo, ar) =>
+`Professional overhead flat-lay catalog photograph showing a COMPLETE bedding set.
+
+PRODUCT DETAILS: ${sig}
+SET CONTENTS: ${pieceInfo}
+
+BACKGROUND: Soft muted pastel surface — like Bella Maison catalog style. A clean, elegant, matte-finish pastel surface:
+- If product is green/sage → soft blush pink or warm peach matte surface
+- If product is blue/navy → warm sand, muted terracotta, or dusty pink matte surface
+- If product is white/cream → sage green or dusty rose matte surface
+- If product is pink/rose → soft sage or cool light grey matte surface
+- If product is earth/brown tones → muted blue-grey or soft lavender matte surface
+The surface should be UNIFORM, FLAT, and MATTE — no texture, no grain, no marble pattern. Just a clean pastel color.
+
+CAMERA: Directly overhead, ~85-90°. Even diffused studio lighting. No harsh shadows.
+
+ARRANGEMENT (organized in clean rows, top to bottom):
+- Top row: Nevresim — neatly folded with a diagonal/triangular fold. IMPORTANT: If the back side of the duvet is NOT visible in the reference photos, fold it showing ONLY the front side — do NOT invent a different back color or fabric
+- Second row: Dekoratif nakışlı yastık kılıfları — STUFFED and plump (NOT flat-folded), embroidery face clearly visible
+- Third row: Çarşaf — folded flat rectangle. Next to it: uyku yastığı kılıfları — also STUFFED and plump
+- Fourth row (if 7+ pieces): Pike, runner, or battaniye — laid horizontally, full width visible
+- Fifth row (if 8-9 pieces): Kırlentler — STUFFED, centered
+
+CRITICAL RULES:
+- Show EXACTLY the number of pieces specified in SET CONTENTS — no more, no less
+- ALL pillowcases and cushions must be STUFFED and THREE-DIMENSIONAL — never flat-folded rectangles
+- Generous breathing space between rows — pieces should NOT touch each other
+- Product colors, embroidery patterns, and edge treatments must match the reference images exactly
+- No text, no labels, no watermarks
+- ${ar} aspect ratio.`,
+  },
+  {
+    id: "infographic_marketing",
+    label: "İnfografik (Premium Pazarlama)",
+    group: "C",
+    description: "Türkçe callout etiketleri ile premium e-ticaret görseli",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, pieceInfo, ar) =>
+`Premium e-commerce marketing infographic photograph for a bedding product.
+
+PRODUCT DETAILS: ${sig}
+SET CONTENTS: ${pieceInfo}
+
+LAYOUT: The bedding product is centered on a perfectly made bed — impeccably ironed, flawlessly neat, symmetrically arranged. The bed is in a clean, bright, modern setting with MINIMAL background distraction. The product is the absolute hero.
+
+CALLOUT BADGE SYSTEM — 5 premium Turkish text badges:
+Create 5 small, elegant callout badges connected to different parts of the product by thin straight lines.
+
+Badge positions (distributed evenly around the product):
+- TOP-LEFT: Fabric type badge → thin line points to the fabric surface
+- TOP-RIGHT: Special feature badge → thin line points to embroidery/pattern area
+- BOTTOM-LEFT: Edge quality badge → thin line points to the edge/border
+- BOTTOM-RIGHT: Comfort/benefit badge → general product
+- BOTTOM-CENTER: Set info badge → "${pieceInfo.split(',').length || 6} Parça Set"
+
+Badge style: Small rounded rectangle, white background with subtle drop shadow, dark text, clean modern sans-serif font. Connected by thin (1px) straight lines to the product.
+
+Badge text suggestions (ALL IN TURKISH — choose what fits this product):
+1. Fabric: "Pamuk Saten" / "Ranforce" / "Keten" / "%100 Pamuk"
+2. Feature: "El İşi Nakış" / "Jakarlı Desen" / "Dijital Baskı"
+3. Edge: "Çift Dikiş Kalite" / "Pipo Kenar" / "Nakışlı Kenar"
+4. Benefit: "Nefes Alan Doku" / "Yumuşak Tüşe" / "4 Mevsim" / "Antialerjik"
+5. Set: piece count info
+
+CRITICAL:
+- Product must match reference images exactly.
+- ALL text must be in TURKISH with correct characters (ş, ğ, ü, ö, ç, ı, İ).
+- ${ar} aspect ratio.`,
+  },
+  {
+    id: "color_texture_ref",
+    label: "Renk/Doku Referans",
+    group: "C",
+    description: "Nakış ve kumaş detay çekimi — pastel arka plan",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Aesthetic close-up photograph showing fabric texture and embroidery detail of the bedding product from the reference images.
+
+PRODUCT DETAILS: ${sig}
+
+COMPOSITION: Show a section of the duvet/nevresim surface laid at a slight angle (~30°), with 1-2 stuffed pillows partially visible in the soft background. The embroidery/pattern area must be the HERO — tack sharp, centered, filling most of the frame. The fabric should lay naturally with gentle folds showing its weight and character.
+
+BACKGROUND: Soft muted pastel surface/backdrop — Bella Maison catalog style. Choose a pastel that CONTRASTS with the product color:
+- If product is green/sage → warm blush pink or soft peach
+- If product is blue/navy → warm sand or dusty pink
+- If product is white/cream → sage green or dusty rose
+- If product is pink/rose → soft sage or cool light grey
+- If product is earth/brown tones → muted blue-grey or soft lavender
+UNIFORM, FLAT, MATTE surface — no texture, no marble, no grain.
+
+CAMERA: Slightly elevated angle (~35-40°), close to the fabric surface. Shallow depth of field — embroidery area sharp, pillows in background soft bokeh. Warm natural light.
+
+CRITICAL:
+- This is NOT a flat swatch on white. It's an AESTHETIC lifestyle detail shot showing fabric quality and embroidery craftsmanship.
+- Product colors, embroidery, and edge treatments must match references exactly.
+- No text, no watermarks.
+- ${ar} aspect ratio.`,
+  },
+];
+
+export type PipelineCallback = (progress: PipelineProgress) => void;
+
+export async function runPipeline(
+  referenceImagesBase64: string[],
+  generationPrompt: string,
+  signatureDetails: string,
+  aspectRatio: string,
+  enabledShotIds: string[],
+  userNotes: string,
+  pieceInfo: string,
+  onProgress: PipelineCallback
+): Promise<PipelineResult[]> {
+  const shots = PIPELINE_SHOTS.filter((s) => enabledShotIds.includes(s.id));
+
+  const results: PipelineResult[] = shots.map((s) => ({
+    id: s.id,
+    label: s.label,
+    imageUrl: null,
+    status: "pending" as const,
+  }));
+
+  const updateProgress = (group: "A" | "B" | "C" | "done", shotId: string) => {
+    onProgress({
+      currentGroup: group,
+      currentShot: shotId,
+      completedCount: results.filter((r) => r.status === "done").length,
+      totalCount: results.length,
+      results: [...results],
+    });
+  };
+
+  const userContext = userNotes
+    ? `\n\nCONTEXT FROM USER (for accuracy only, do NOT render as text): ${userNotes}`
+    : "";
+  const fullGenerationPrompt = generationPrompt + userContext;
+  const fullSignatureDetails = signatureDetails + userContext;
+
+  // Fully sequential — one shot at a time, model gets full attention per shot
+  for (const shot of shots) {
+    const idx = results.findIndex((r) => r.id === shot.id);
+    results[idx].status = "generating";
+    updateProgress(shot.group, shot.id);
+
+    try {
+      const prompt = shot.promptBuilder(fullGenerationPrompt, fullSignatureDetails, pieceInfo, aspectRatio);
+      const imageUrl = await generateImageRaw(prompt, referenceImagesBase64, aspectRatio, shot.textFirst);
+      results[idx].imageUrl = imageUrl;
+      results[idx].status = "done";
+    } catch (err: any) {
+      results[idx].status = "error";
+      results[idx].error = err.message || "Uretim hatasi";
+    }
+    updateProgress(shot.group, shot.id);
+  }
+
+  updateProgress("done", "");
+  return results;
+}
