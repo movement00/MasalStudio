@@ -115,6 +115,85 @@ export const PIPELINE_SHOTS: PipelineShot[] = [
       `The book presented as a GIFT — sitting on tissue paper inside a beautiful gift box, with a satin ribbon beside it. Scattered confetti stars and a small birthday card visible. The book cover faces the camera. Premium gift-giving moment. Bright, joyful lighting. This should make parents want to buy it as a birthday present.`
     ),
   },
+  {
+    id: "angle_45",
+    label: "Kitap 45° Açı (Kalite)",
+    group: "A",
+    description: "Kapak + sırt görünür, kalite sinyali",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (gp, _sig, _pi, ar) => BASE_INSTRUCTIONS(gp, ar,
+      `Book shown at exactly 45-degree angle to the camera, showing BOTH the cover AND the spine/edge thickness simultaneously. This is a QUALITY SIGNAL shot — demonstrates the book is a real substantial printed product. Camera at book level, clean pastel background. Soft studio lighting with gentle shadow on one side. The book stands upright with a slight tilt. Professional e-commerce detail shot.`
+    ),
+  },
+  {
+    id: "before_after",
+    label: "Önce / Sonra Dönüşüm",
+    group: "A",
+    description: "Gerçek fotoğraf → Pixar karakter yan yana",
+    textFirst: true,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Split-screen BEFORE/AFTER transformation marketing image for a personalized children's storybook.
+
+BOOK DETAILS: ${sig}
+
+LAYOUT: Vertical split (50/50). On the LEFT side: a polaroid-style real photograph of a child (generic stock photo look — smiling toddler/kid). On the RIGHT side: the same child transformed into a 3D Pixar-style cartoon character on the book cover.
+
+Connect the two sides with a stylized arrow or "→" symbol in the center with soft glow effect.
+
+Add small Turkish text at the top: "FOTOĞRAFINI YÜKLE" (upload your photo) and at the bottom: "PIXAR KAHRAMANI OL" (become a Pixar hero).
+
+Clean modern design. Pastel gradient background. This is a MARKETING image showing the transformation magic. ${ar} aspect ratio.
+
+CRITICAL: All Turkish text must have correct characters (ş, ğ, ü, ö, ç, ı, İ).`,
+  },
+  {
+    id: "child_holding",
+    label: "Çocuk Kitabı Tutuyor",
+    group: "A",
+    description: "Çocuk şaşkın/mutlu ifadeyle kitap tutuyor",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Lifestyle photograph of a happy child (age 4-8) holding the personalized storybook with an amazed, excited expression.
+
+BOOK DETAILS: ${sig}
+
+The child's face should show GENUINE delight — eyes wide with wonder, mouth slightly open in surprise, pure joy. The child holds the book open at their chest level, cover facing the camera so it's clearly visible.
+
+SCENE: Warm cozy home environment — soft bokeh of a living room or bedroom behind. Natural window light illuminating the child's face. Shot at f/2.8 for shallow depth of field. 85mm lens, eye-level.
+
+CRITICAL:
+- The book cover and illustrations must match reference images EXACTLY
+- The child should look realistic, relatable (not AI-generated looking)
+- Focus on EMOTIONAL REACTION — this is about the child's joy, not just the book
+- ${ar} aspect ratio`,
+  },
+  {
+    id: "parent_child_reading",
+    label: "Ebeveyn + Çocuk Okuma",
+    group: "A",
+    description: "Kanepe/yatakta birlikte okuma sahnesi",
+    textFirst: false,
+    enabled: true,
+    promptBuilder: (_gp, sig, _pi, ar) =>
+`Warm lifestyle photograph of a parent and child reading the personalized storybook together on a couch or bed.
+
+BOOK DETAILS: ${sig}
+
+SCENE: A mother (or father) sitting on a comfortable couch/bed with their child (age 3-7) snuggled beside them. The book is open, both looking at the pages. Warm intimate family moment — bedtime story or cozy afternoon reading time.
+
+The book cover/pages should be visible enough that viewers can see the beautiful 3D illustrations. Warm golden lighting from a side lamp or window. Soft blanket, plush pillows in the background.
+
+EMOTIONAL TONE: Safe, loving, nostalgic. The kind of photo that makes grandparents buy this book.
+
+CRITICAL:
+- The book must match reference images EXACTLY
+- Natural, genuine family atmosphere — NOT staged or stiff
+- Shot at f/4 for some background blur
+- ${ar} aspect ratio`,
+  },
 
   // ═══ GROUP B: Detail Shots — close-ups ═══
   {
