@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import type { AppMode, AngleOption } from "../types";
-import { ASPECT_RATIOS, ANGLE_OPTIONS, INFOGRAPHIC_OPTIONS, PIECE_PRESETS } from "../constants";
+import { ASPECT_RATIOS, ANGLE_OPTIONS, INFOGRAPHIC_OPTIONS, PIECE_PRESETS, HOOK_TEMPLATES } from "../constants";
 
 interface SettingsPanelProps {
   mode: AppMode;
@@ -16,6 +16,8 @@ interface SettingsPanelProps {
   onPieceCountChange: (count: number) => void;
   imageQuality: string;
   onImageQualityChange: (quality: string) => void;
+  selectedHook: string;
+  onHookChange: (hookId: string) => void;
   userNotes: string;
   onUserNotesChange: (notes: string) => void;
 }
@@ -27,6 +29,7 @@ export function SettingsPanel({
   boxContentText, onBoxContentTextChange,
   pieceCount, onPieceCountChange,
   imageQuality, onImageQualityChange,
+  selectedHook, onHookChange,
   userNotes, onUserNotesChange,
 }: SettingsPanelProps) {
   const selectedPreset = PIECE_PRESETS.find(p => p.count === pieceCount);
@@ -161,6 +164,38 @@ export function SettingsPanel({
               </div>
             </div>
           ))}
+        </motion.div>
+      )}
+
+      {/* Hook templates */}
+      {mode === "hook" && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-surface rounded-xl border border-border p-4"
+        >
+          <p className="text-[10px] font-mono text-subtle uppercase tracking-widest mb-2.5">Hook Kategorisi</p>
+          <div className="space-y-1.5">
+            {HOOK_TEMPLATES.map((hook) => (
+              <button
+                key={hook.id}
+                onClick={() => onHookChange(hook.id)}
+                className={`w-full p-3 min-h-[44px] md:min-h-0 rounded-lg text-left transition-all border ${
+                  selectedHook === hook.id
+                    ? "bg-accent/10 text-accent border-accent/30"
+                    : "bg-surface-2 text-muted hover:text-text border-border"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-base">{hook.emoji}</span>
+                  <div>
+                    <p className="text-xs font-semibold">{hook.hookText}</p>
+                    <p className="text-[10px] text-subtle mt-0.5">{hook.solutionText}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
         </motion.div>
       )}
 

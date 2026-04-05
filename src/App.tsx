@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { AppMode, ProcessStep, UploadedFile, ProductAnalysis, InfographicAnalysis, BoxContentAnalysis, ProductAnglesAnalysis, AngleOption } from "./types";
-import { ANGLE_OPTIONS, PIECE_PRESETS } from "./constants";
+import { ANGLE_OPTIONS, PIECE_PRESETS, HOOK_TEMPLATES } from "./constants";
 import { setImageSize } from "./services/geminiService";
 import * as api from "./services/geminiService";
 import { PIPELINE_SHOTS, runPipeline } from "./services/pipelineService";
@@ -57,6 +57,10 @@ const MODE_COPY: Record<AppMode, { title: string; desc: string }> = {
     title: "SEO / Ürün İçeriği",
     desc: "Kitap görsellerinizden SEO uyumlu başlık, açıklama ve anahtar kelimeler oluşturun.",
   },
+  hook: {
+    title: "Hook Görseli",
+    desc: "Duygusal bağ kuran Instagram hook görselleri — annelerin sorunlarına çözüm sunan pazarlama içerikleri.",
+  },
 };
 
 function App() {
@@ -94,6 +98,7 @@ function App() {
   const [smProgress, setSmProgress] = useState<SocialMediaProgress | null>(null);
   const [smResults, setSmResults] = useState<SocialMediaResultType[]>([]);
   const [autoSocialMedia, setAutoSocialMedia] = useState(false);
+  const [selectedHook, setSelectedHook] = useState(HOOK_TEMPLATES[0].id);
 
   const [seoData, setSeoData] = useState<SeoProductData | null>(null);
   const [seoGenerating, setSeoGenerating] = useState(false);
@@ -404,6 +409,29 @@ function App() {
       } else if (mode === "angles") {
         const result = await api.analyzeProductAngles(b64List);
         setAnglesAnalysis(result); setStatus("selection");
+      } else if (mode === "hook") {
+        const hook = HOOK_TEMPLATES.find(h => h.id === selectedHook) || HOOK_TEMPLATES[0];
+        setStatus("generating");
+        const hookPrompt = `Generate a powerful emotional marketing image for a personalized children's storybook.
+
+HOOK: "${hook.hookText}"
+SOLUTION: "${hook.solutionText}"
+
+SCENE: ${hook.sceneDescription}
+
+The storybook in the image must look EXACTLY like the reference images — same cover art, same style. The book must be a THIN SOFT-COVER A4 book (not hardcover).
+
+CRITICAL TEXT OVERLAY INSTRUCTIONS:
+- At the TOP of the image, display the hook text in LARGE BOLD white letters with a subtle dark shadow: "${hook.hookText}"
+- At the BOTTOM, display the solution in smaller warm-colored text: "${hook.solutionText}"
+- ALL TEXT MUST BE IN TURKISH with correct characters (ş, ğ, ü, ö, ç, ı, İ)
+- Text must be PERFECTLY READABLE — clean, modern sans-serif font
+
+FORMAT: 9:16 vertical (Instagram Story/Reel)
+MOOD: Emotional, warm, relatable — a parent should feel "this is exactly my problem"
+COLOR: Warm pastel background, the book is the hero element`;
+        const img = await api.generateImageRaw(hookPrompt, b64List, "9:16", true);
+        setGeneratedImage(img); setStatus("done");
       }
     } catch (err: any) { handleError(err); }
   };
@@ -580,6 +608,7 @@ function App() {
           boxContentText={boxContentText} onBoxContentTextChange={setBoxContentText}
           pieceCount={pipelinePieceCount} onPieceCountChange={setPipelinePieceCount}
           imageQuality={imageQuality} onImageQualityChange={setImageQuality}
+          selectedHook={selectedHook} onHookChange={setSelectedHook}
           userNotes={pipelineUserNotes} onUserNotesChange={setPipelineUserNotes}
         />
       )}
@@ -1033,6 +1062,7 @@ function App() {
                 boxContentText={boxContentText} onBoxContentTextChange={setBoxContentText}
                 pieceCount={pipelinePieceCount} onPieceCountChange={setPipelinePieceCount}
                 imageQuality={imageQuality} onImageQualityChange={setImageQuality}
+                selectedHook={selectedHook} onHookChange={setSelectedHook}
                 userNotes={pipelineUserNotes} onUserNotesChange={setPipelineUserNotes}
               />
               {status === "idle" && (

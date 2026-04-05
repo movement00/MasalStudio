@@ -100,3 +100,63 @@ export const INFOGRAPHIC_OPTIONS: Record<string, { title: string; icon: string; 
     options: ["14 Hikaye Seçeneği", "Hızlı Teslimat", "Güvenli Ödeme", "Ücretsiz Kargo", "İade Garantisi"],
   },
 };
+
+export interface HookTemplate {
+  id: string;
+  category: string;
+  hookText: string;
+  solutionText: string;
+  sceneDescription: string;
+  emoji: string;
+}
+
+export const HOOK_TEMPLATES: HookTemplate[] = [
+  {
+    id: "yemek",
+    category: "Yemek Sorunu",
+    hookText: "Çocuğunuz yemek yemiyor mu?",
+    solutionText: "Kendi masalında yemek yiyen kahramanı görünce o da yemeğe başlar!",
+    sceneDescription: "A warm kitchen scene with a children's storybook open on the table. The book shows a 3D cartoon child character happily eating food. A real plate of food beside the book. Warm cozy lighting. The scene suggests 'reading while eating' moment.",
+    emoji: "🍽️",
+  },
+  {
+    id: "uyku",
+    category: "Uyku Sorunu",
+    hookText: "Yatmak istemiyorum diyor mu?",
+    solutionText: "Kendi masalını okumak için yatağa koşacak!",
+    sceneDescription: "A cozy bedtime scene. The children's storybook on a fluffy pillow with warm fairy lights. Soft blanket, a small stuffed teddy bear beside the book. Dreamy moonlit atmosphere. The book cover shows a sleepy cartoon character. Magical bedtime story moment.",
+    emoji: "😴",
+  },
+  {
+    id: "ozguven",
+    category: "Özgüven",
+    hookText: "Özgüveni düşük mü?",
+    solutionText: "Hikayenin kahramanı O — her sayfada kendi başarısını görür!",
+    sceneDescription: "An empowering scene. The storybook open showing a brave cartoon child character doing something heroic. Gold star stickers and a 'champion' ribbon near the book. Bright, uplifting lighting. Confidence-building atmosphere.",
+    emoji: "💪",
+  },
+  {
+    id: "ekran",
+    category: "Ekran Bağımlılığı",
+    hookText: "Ekrandan gözünü alamıyor mu?",
+    solutionText: "Kendi yüzünü gördüğü kitap ekrandan daha çekici!",
+    sceneDescription: "A tablet/phone pushed aside, and the children's storybook in the spotlight. The book is more colorful and inviting than the dimmed screen. Warm natural light on the book, cool blue light from the neglected screen. Contrast between digital and physical.",
+    emoji: "📱",
+  },
+  {
+    id: "kardes",
+    category: "Kardeş Kıskançlığı",
+    hookText: "Kardeşiyle anlaşamıyor mu?",
+    solutionText: "Hikayede paylaşmayı öğrenen kahraman = sizin çocuğunuz!",
+    sceneDescription: "Two children's storybooks side by side — each with a different child character but same story. Warm family atmosphere. Small toy figures of siblings playing together near the books. Soft pastel colors, harmonious composition.",
+    emoji: "👫",
+  },
+  {
+    id: "okuma",
+    category: "Kitap Sevgisi",
+    hookText: "Kitap okumayı sevmiyor mu?",
+    solutionText: "Kendisi kitabın içinde olunca bırakamıyor!",
+    sceneDescription: "An exciting scene with the storybook open showing vibrant adventure illustrations. Magic sparkles and stars coming out of the book pages. A magnifying glass near the book revealing character details. Magical discovery atmosphere.",
+    emoji: "📖",
+  },
+];
